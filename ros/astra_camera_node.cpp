@@ -131,9 +131,16 @@ int main(int argc, char **argv){
   rclcpp::Node::SharedPtr n = rclcpp::Node::make_shared("astra_camera");
   rclcpp::Node::SharedPtr pnh = rclcpp::Node::make_shared("astra_camera_");
 
-  pnh->set_parameter_if_not_set("use_ir", use_ir);
-  pnh->set_parameter_if_not_set("use_color", use_color);
-  pnh->set_parameter_if_not_set("use_depth", use_depth);
+  try
+  {
+    pnh->declare_parameter("use_ir", use_ir);
+    pnh->declare_parameter("use_color", use_color);
+    pnh->declare_parameter("use_depth", use_depth);
+  }
+  catch(rclcpp::exceptions::ParameterAlreadyDeclaredException& e)
+  {
+    // do nothing
+  }
 
   astra_wrapper::AstraDriver drv(n, pnh, width, height, framerate, dwidth, dheight, dframerate, dformat);
 

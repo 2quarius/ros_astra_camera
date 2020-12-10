@@ -43,8 +43,7 @@ ExternalProject_Add(astra_openni2
   CONFIGURE_COMMAND echo "no need to configure"
   #${CMAKE_CURRENT_SOURCE_DIR}/libantlr/configure --prefix=<INSTALL_DIR>
   BUILD_IN_SOURCE 1
-  BUILD_COMMAND make release FILTER=${obfilter}
-  INSTALL_DIR openni2
+  BUILD_COMMAND make release FILTER=${obfilter} CFLAGS+=-fPIC CFLAGS+=-Wno-stringop-truncation CFLAGS+=-I${CMAKE_CURRENT_BINARY_DIR}/astra_openni2/src/astra_openni2/ThirdParty/PSCommon/XnLib/Include CFLAGS+=-I${CMAKE_CURRENT_BINARY_DIR}/astra_openni2/src/astra_openni2/Include CFLAGS+=-I${CMAKE_CURRENT_BINARY_DIR}/astra_openni2/src/astra_openni2/Source/Drivers/OniFile/Formats CFLAGS+=-I${CMAKE_CURRENT_BINARY_DIR}/astra_openni2/src/astra_openni2/Source/Drivers/OniFile CFLAGS+=-I${CMAKE_CURRENT_BINARY_DIR}/astra_openni2/src/astra_openni2/Source/Drivers/orbbec/Include CFLAGS+=-I${CMAKE_CURRENT_BINARY_DIR}/astra_openni2/src/astra_openni2/Source/Drivers/orbbec/Core CFLAGS+=-I${CMAKE_CURRENT_BINARY_DIR}/astra_openni2/src/astra_openni2/Source/Drivers/orbbec CFLAGS+=-I${CMAKE_CURRENT_BINARY_DIR}/astra_openni2/src/astra_openni2/Source/DepthUtils CFLAGS+=-I${CMAKE_CURRENT_BINARY_DIR}/astra_openni2/src/astra_openni2/ThirdParty/Orbbec/Include CFLAGS+=-I${CMAKE_CURRENT_BINARY_DIR}/astra_openni2/src/astra_openni2/Samples/Common CFLAGS+=-I${CMAKE_CURRENT_BINARY_DIR}/astra_openni2/src/astra_openni2/Samples/MWClosestPoint  INSTALL_DIR openni2
   INSTALL_COMMAND tar -xjf <SOURCE_DIR>/Packaging/Final/OpenNI-Linux-2.3.tar.bz2 -C <INSTALL_DIR> --strip 1 && mkdir -p <INSTALL_DIR>/include && ln -fs <INSTALL_DIR>/Include <INSTALL_DIR>/include/openni2
   PATCH_COMMAND
     ${patch_exe} -p1 -N < ${CMAKE_CURRENT_SOURCE_DIR}/astra_openni2-patch.diff
@@ -118,6 +117,10 @@ install(FILES 56-orbbec-usb.rules
 
 install(PROGRAMS scripts/create_udev_rules
   DESTINATION lib/${PROJECT_NAME}
+)
+
+install(DIRECTORY launch
+  DESTINATION share/${PROJECT_NAME}
 )
 
 ament_export_include_directories(include)
