@@ -31,28 +31,31 @@
  */
 
 #include "astra_camera/astra_driver.h"
-#include <nodelet/nodelet.h>
+#include <rclcpp/rclcpp.hpp>
 
-namespace astra_camera
-{
-
-class AstraDriverNodelet : public nodelet::Nodelet
+namespace astra_camera{
+class AstraDriverNode : public rclcpp::Node
 {
 public:
-  AstraDriverNodelet()  {};
-
-  ~AstraDriverNodelet() {}
-
-private:
-  virtual void onInit()
+  AstraDriverNode(const rclcpp::NodeOptions& options) : rclcpp::Node("astra_driver", options)
   {
-    lp.reset(new astra_wrapper::AstraDriver(getNodeHandle(), getPrivateNodeHandle()));
+    // RGB
+    size_t width = 1280;
+    size_t height = 1024;
+    double framerate = 30;
+
+    // Depth
+    size_t dwidth = 640;
+    size_t dheight = 480;
+    double dframerate = 30;
+    astra_wrapper::PixelFormat dformat = astra_wrapper::PixelFormat::PIXEL_FORMAT_DEPTH_1_MM;
+    auto sub_node = this->create_sub_node("astra_camera");
+    auto sub_private_node = this->create_sub_node("astra_camera_");
+    astra_wrapper::AstraDriver drv(sub_node, sub_private_node, width, height, framerate, dwidth, dheight, dframerate, dformat);
   };
 
-  boost::shared_ptr<astra_wrapper::AstraDriver> lp;
+  ~AstraDriverNode() {}
 };
-
 }
-
-#include <pluginlib/class_list_macros.h>
-PLUGINLIB_DECLARE_CLASS(astra_camera, AstraDriverNodelet, astra_camera::AstraDriverNodelet, nodelet::Nodelet);
+#include "rclcpp_components/register_node_macro.hpp"
+RCLCPP_COMPONENTS_REGISTER_NODE(astra_camera::AstraDriverNode)

@@ -7,7 +7,7 @@ if(NOT CMAKE_CXX_STANDARD)
 endif()
 
 if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-  add_compile_options(-Wall -Wextra)
+  add_compile_options(-Wall -Wextra -fPIC)
   add_compile_options(-Wno-deprecated)
 endif()
 
@@ -17,6 +17,7 @@ find_package(sensor_msgs REQUIRED)
 find_package(builtin_interfaces REQUIRED)
 find_package(rmw_implementation_cmake REQUIRED)
 find_package(Boost REQUIRED COMPONENTS system thread)
+find_package(rclcpp_components REQUIRED)
 
 option(FILTER "OB Filter library" ON)
 
@@ -83,11 +84,21 @@ ament_target_dependencies(astra_driver_lib
 target_link_libraries(astra_driver_lib astra_wrapper ${Boost_LIBRARIES})
 add_dependencies(astra_driver_lib astra_openni2)
 
+add_library(astra_camera_nodelet SHARED
+  ros/astra_camera_nodelet.cpp
+)
+target_link_libraries(astra_camera_nodelet astra_driver_lib)
+add_dependencies(astra_camera_nodelet astra_openni2)
+
 add_executable(astra_camera_node
    ros/astra_camera_node.cpp
 )
 target_link_libraries(astra_camera_node astra_driver_lib)
 add_dependencies(astra_camera_node astra_openni2)
+
+install(TARGETS astra_camera_nodelet
+  DESTINATION lib
+)
 
 install(TARGETS astra_camera_node
   DESTINATION lib/${PROJECT_NAME}
