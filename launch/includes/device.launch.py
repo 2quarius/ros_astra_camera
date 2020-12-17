@@ -2,7 +2,8 @@ from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument
 from launch_ros.actions import Node
 from launch.substitutions import LaunchConfiguration
-from launch_ros.actions import ComposableNodeContainer
+from launch_ros.actions import LoadComposableNodes
+from launch.conditions import LaunchConfigurationNotEquals, LaunchConfigurationEquals
 from launch_ros.descriptions import ComposableNode
 
 def arg(name, value):
@@ -29,12 +30,15 @@ def generate_launch_description():
         arg('rgb', 'rgb'),
         arg('ir', 'ir'),
         arg('depth', 'depth'),
-        arg('depth_registered', 'depth_registered'),
-        ComposableNodeContainer(
-            name='component_container',
-            namespace=LaunchConfiguration('manager'),
-            package='rclcpp_components',
-            executable='component_container',
+        DeclareLaunchArgument(
+            name='container', default_value='',
+            description=(
+                'Name of an existing node container to load launched nodes into. '
+                'If unset, a new container will be created.'
+            )
+        ),
+        LoadComposableNodes(
+            condition=LaunchConfigurationNotEquals('container', ''),
             composable_node_descriptions=[
                 ComposableNode(
                     package='astra_camera',
@@ -57,11 +61,11 @@ def generate_launch_description():
                         ("ir", LaunchConfiguration('ir')),
                         ('rgb', LaunchConfiguration('rgb')),
                         ('depth', LaunchConfiguration('depth')),
-                        ('depth_registered', LaunchConfiguration('depth_registered')),
                         ([LaunchConfiguration('rgb'), '/image'], [LaunchConfiguration('rgb'), '/image_raw']),
-                        ([LaunchConfiguration('depth'), '/image'], [LaunchConfiguration('depth_registered'), '/image_raw'])
+                        ([LaunchConfiguration('depth'), '/image'], 'depth_registered/image_raw')
                     ]
                 )
-            ]
+            ],
+            target_container = LaunchConfiguration('container')
         )
     ])

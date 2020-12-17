@@ -7,7 +7,7 @@ if(NOT CMAKE_CXX_STANDARD)
 endif()
 
 if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-  add_compile_options(-Wall -Wextra -fPIC)
+  add_compile_options(-Wall -Wextra -fPIC -fmax-errors=2)
   add_compile_options(-Wno-deprecated)
 endif()
 
@@ -89,6 +89,7 @@ add_library(astra_camera_nodelet SHARED
 )
 target_link_libraries(astra_camera_nodelet astra_driver_lib)
 add_dependencies(astra_camera_nodelet astra_openni2)
+rclcpp_components_register_nodes(astra_camera_nodelet "astra_camera::AstraDriverNode")
 
 add_executable(astra_camera_node
    ros/astra_camera_node.cpp
@@ -96,8 +97,47 @@ add_executable(astra_camera_node
 target_link_libraries(astra_camera_node astra_driver_lib)
 add_dependencies(astra_camera_node astra_openni2)
 
+find_package(libuvc REQUIRED)
+find_package(rosidl_default_generators REQUIRED)
+find_package(image_transport REQUIRED)
+find_package(camera_info_manager REQUIRED)
+
+rosidl_generate_interfaces(${PROJECT_NAME}
+  srv/GetDeviceType.srv
+  srv/GetCameraInfo.srv
+  srv/GetUVCExposure.srv
+  srv/GetUVCGain.srv
+  srv/GetUVCWhiteBalance.srv
+  srv/SetUVCExposure.srv
+  srv/SetUVCGain.srv
+  srv/SetUVCWhiteBalance.srv
+  DEPENDENCIES builtin_interfaces sensor_msgs
+)
+ament_export_dependencies(rosidl_default_runtime)
+message(STATUS "libuvc  ${libuvc_VERSION_MAJOR}.${libuvc_VERSION_MINOR}.${libuvc_VERSION_PATCH}")
+add_executable(camera_node 
+  src/libuvc_camera/main.cpp
+  src/libuvc_camera/camera_driver.cpp
+  src/astra_device_type.cpp
+)
+rosidl_target_interfaces(camera_node
+  ${PROJECT_NAME} "rosidl_typesupport_cpp")
+ament_target_dependencies(camera_node
+  rclcpp
+  sensor_msgs
+  camera_info_manager
+  image_transport
+)
+target_link_libraries(camera_node ${libuvc_LIBRARIES} ${Boost_LIBRARIES})
+
+install(TARGETS camera_node
+  DESTINATION lib/${PROJECT_NAME}
+)
+
 install(TARGETS astra_camera_nodelet
-  DESTINATION lib
+  ARCHIVE DESTINATION lib
+  LIBRARY DESTINATION lib
+  RUNTIME DESTINATION bin
 )
 
 install(TARGETS astra_camera_node

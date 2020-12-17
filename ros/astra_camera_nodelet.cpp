@@ -32,7 +32,9 @@
 
 #include "astra_camera/astra_driver.h"
 #include <rclcpp/rclcpp.hpp>
+#include <chrono>
 
+using namespace std::chrono_literals;
 namespace astra_camera{
 class AstraDriverNode : public rclcpp::Node
 {
@@ -49,9 +51,28 @@ public:
     size_t dheight = 480;
     double dframerate = 30;
     astra_wrapper::PixelFormat dformat = astra_wrapper::PixelFormat::PIXEL_FORMAT_DEPTH_1_MM;
-    auto sub_node = this->create_sub_node("astra_camera");
-    auto sub_private_node = this->create_sub_node("astra_camera_");
-    astra_wrapper::AstraDriver drv(sub_node, sub_private_node, width, height, framerate, dwidth, dheight, dframerate, dformat);
+    
+    bool use_ir = true;
+    bool use_color = true;
+    bool use_depth = true;
+
+    rclcpp::Node::SharedPtr nh = rclcpp::Node::make_shared("astra_camera");
+    rclcpp::Node::SharedPtr pnh = rclcpp::Node::make_shared("astra_camera_");
+
+    try
+    {
+      pnh->declare_parameter("use_ir", use_ir);
+      pnh->declare_parameter("use_color", use_color);
+      pnh->declare_parameter("use_depth", use_depth);
+    }
+    catch(rclcpp::exceptions::ParameterAlreadyDeclaredException& e)
+    {
+      // do nothing
+    }
+    RCLCPP_INFO(nh->get_logger(), "Initializing...");
+    astra_wrapper::AstraDriver drv(nh, pnh, width, height, framerate, dwidth, dheight, dframerate, dformat);
+    RCLCPP_INFO(nh->get_logger(), "Initialized");
+    rclcpp::spin(nh);
   };
 
   ~AstraDriverNode() {}
