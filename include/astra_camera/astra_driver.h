@@ -61,6 +61,8 @@
 #include <rcl/time.h>
 #include <rclcpp/rclcpp.hpp>
 #include "astra_camera/ros12_shim.h"
+#include <astra_camera/srv/get_camera_info.hpp>
+#include <astra_camera/srv/get_device_type.hpp>
 
 namespace astra_wrapper
 {
@@ -104,6 +106,11 @@ private:
   void irAttemptStream();
 
   //bool getSerialCb(astra_camera::GetSerialRequest& req, astra_camera::GetSerialResponse& res);
+  void getCameraInfoCb(const std::shared_ptr<astra_camera::srv::GetCameraInfo::Request> request,
+          std::shared_ptr<astra_camera::srv::GetCameraInfo::Response> response)
+  
+  void getDeviceTypeCb(const std::shared_ptr<astra_camera::srv::GetDeviceType::Request> request,
+          std::shared_ptr<astra_camera::srv::GetDeviceType::Response> response)
 
   //void configCb(Config &config, uint32_t level);
 
@@ -128,6 +135,8 @@ private:
 
   /** \brief get_serial server*/
   //ros::ServiceServer get_serial_server;
+  rclcpp::Service<astra_camera::srv::GetDeviceType>::SharedPtr get_device_type_server;
+  rclcpp::Service<astra_camera::srv::GetCameraInfo>::SharedPtr get_camera_info_server;
 
   /** \brief reconfigure server*/
   //boost::shared_ptr<ReconfigureServer> reconfigure_server_;

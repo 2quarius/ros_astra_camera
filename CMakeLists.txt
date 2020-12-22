@@ -19,88 +19,48 @@ find_package(rmw_implementation_cmake REQUIRED)
 find_package(Boost REQUIRED COMPONENTS system thread)
 find_package(rclcpp_components REQUIRED)
 
-option(FILTER "OB Filter library" ON)
+#MACHINE = $(shell uname -m)
+execute_process(COMMAND uname -m  OUTPUT_VARIABLE  MACHINES )
+execute_process(COMMAND getconf LONG_BIT  OUTPUT_VARIABLE  MACHINES_BIT )
+MESSAGE(STATUS "ORRBEC Machine : ${MACHINES}")
+MESSAGE(STATUS "ORRBEC Machine Bits : ${MACHINES_BIT}")
+IF ( (${MACHINES} MATCHES "x86_64") AND (${MACHINES_BIT} MATCHES "64")  )
+      set(HOST_PLATFORM  "x64")
+# for schroot enviroment
+ELSEIF ( (${MACHINES} MATCHES "x86_64") AND (${MACHINES_BIT} MATCHES "32")  )
+      set(HOST_PLATFORM  "x86")
+ELSEIF ( ${MACHINES} MATCHES "x86" )
+ELSEIF ( ${MACHINES} MATCHES "x86" )
+      set(HOST_PLATFORM  "x86")
+ELSEIF ( ${MACHINES} MATCHES "i686" )
+      set(HOST_PLATFORM  "x86")
+ELSEIF ( ${MACHINES} MATCHES "i386" )
+      set(HOST_PLATFORM  "x86")
+ELSEIF ( ${MACHINES} MATCHES "arm" )
+      set(HOST_PLATFORM  "arm")
+ELSEIF ( (${MACHINES} MATCHES "aarch64") AND (${MACHINES_BIT} MATCHES "64")  )
+      set(HOST_PLATFORM  "arm64")
+ELSEIF ( (${MACHINES} MATCHES "aarch64") AND (${MACHINES_BIT} MATCHES "32")  )
+      set(HOST_PLATFORM  "arm")
+ENDIF ()
 
-if( ${FILTER} STREQUAL "ON" )
-set(obfilter "On")
-else()
-set(obfilter "Off")
-endif()
+message(STATUS "ORRBEC : ${HOST_PLATFORM}")
+message(STATUS "libuvc ${libuvc_VERSION_MAJOR}.${libuvc_VERSION_MINOR}.${libuvc_VERSION_PATCH}")
 
-include(ExternalProject)
-
-if(WIN32)
-  set(patch_exe patch.exe)
-else()
-  set(patch_exe patch)
-endif()
-
-ExternalProject_Add(astra_openni2
-  PREFIX astra_openni2
-  # SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/astra_openni2/OpenNI2
-  GIT_REPOSITORY https://github.com/orbbec/OpenNI2.git
-  GIT_TAG orbbec_ros
-  GIT_CONFIG user.email=you@example.com user.name=YourName
-  CONFIGURE_COMMAND echo "no need to configure"
-  #${CMAKE_CURRENT_SOURCE_DIR}/libantlr/configure --prefix=<INSTALL_DIR>
-  BUILD_IN_SOURCE 1
-  BUILD_COMMAND make release FILTER=${obfilter} CFLAGS+=-fPIC CFLAGS+=-Wno-stringop-truncation CFLAGS+=-I${CMAKE_CURRENT_BINARY_DIR}/astra_openni2/src/astra_openni2/ThirdParty/PSCommon/XnLib/Include CFLAGS+=-I${CMAKE_CURRENT_BINARY_DIR}/astra_openni2/src/astra_openni2/Include CFLAGS+=-I${CMAKE_CURRENT_BINARY_DIR}/astra_openni2/src/astra_openni2/Source/Drivers/OniFile/Formats CFLAGS+=-I${CMAKE_CURRENT_BINARY_DIR}/astra_openni2/src/astra_openni2/Source/Drivers/OniFile CFLAGS+=-I${CMAKE_CURRENT_BINARY_DIR}/astra_openni2/src/astra_openni2/Source/Drivers/orbbec/Include CFLAGS+=-I${CMAKE_CURRENT_BINARY_DIR}/astra_openni2/src/astra_openni2/Source/Drivers/orbbec/Core CFLAGS+=-I${CMAKE_CURRENT_BINARY_DIR}/astra_openni2/src/astra_openni2/Source/Drivers/orbbec CFLAGS+=-I${CMAKE_CURRENT_BINARY_DIR}/astra_openni2/src/astra_openni2/Source/DepthUtils CFLAGS+=-I${CMAKE_CURRENT_BINARY_DIR}/astra_openni2/src/astra_openni2/ThirdParty/Orbbec/Include CFLAGS+=-I${CMAKE_CURRENT_BINARY_DIR}/astra_openni2/src/astra_openni2/Samples/Common CFLAGS+=-I${CMAKE_CURRENT_BINARY_DIR}/astra_openni2/src/astra_openni2/Samples/MWClosestPoint  INSTALL_DIR openni2
-  INSTALL_COMMAND tar -xjf <SOURCE_DIR>/Packaging/Final/OpenNI-Linux-2.3.tar.bz2 -C <INSTALL_DIR> --strip 1 && mkdir -p <INSTALL_DIR>/include && ln -fs <INSTALL_DIR>/Include <INSTALL_DIR>/include/openni2
-  PATCH_COMMAND
-    ${patch_exe} -p1 -N < ${CMAKE_CURRENT_SOURCE_DIR}/astra_openni2-patch.diff
-
+set(ORBBEC_OPENNI2_REDIST  "${CMAKE_CURRENT_SOURCE_DIR}/include/openni2_redist/${HOST_PLATFORM}")
+link_directories(${ORBBEC_OPENNI2_REDIST})
+include_directories(
+  include
+  ${Boost_INCLUDE_DIRS}
+  ${CMAKE_CURRENT_SOURCE_DIR}/include/openni2 
 )
-
-link_directories(${CMAKE_CURRENT_BINARY_DIR}/openni2/Redist)
-include_directories(include
-                    ${Boost_INCLUDE_DIRS}
-                    ${CMAKE_CURRENT_BINARY_DIR}/openni2/include
-                    )
-
-add_library(astra_wrapper
-   src/astra_convert.cpp
-   src/astra_device.cpp
-   src/astra_device_info.cpp
-   src/astra_timer_filter.cpp
-   src/astra_frame_listener.cpp
-   src/astra_device_manager.cpp
-   src/astra_exception.cpp
-   src/astra_video_mode.cpp
-)
-ament_target_dependencies(astra_wrapper
-  "builtin_interfaces"
-  "rclcpp"
-  "sensor_msgs"
-)
-target_link_libraries(astra_wrapper -lOpenNI2Orbbec ${Boost_LIBRARIES})
-add_dependencies(astra_wrapper astra_openni2)
-
-add_library(astra_driver_lib src/astra_driver.cpp)
-ament_target_dependencies(astra_driver_lib
-  "builtin_interfaces"
-  "rclcpp"
-  "sensor_msgs"
-)
-target_link_libraries(astra_driver_lib astra_wrapper ${Boost_LIBRARIES})
-add_dependencies(astra_driver_lib astra_openni2)
-
-add_library(astra_camera_nodelet SHARED
-  ros/astra_camera_nodelet.cpp
-)
-target_link_libraries(astra_camera_nodelet astra_driver_lib)
-add_dependencies(astra_camera_nodelet astra_openni2)
-rclcpp_components_register_nodes(astra_camera_nodelet "astra_camera::AstraDriverNode")
-
-add_executable(astra_camera_node
-   ros/astra_camera_node.cpp
-)
-target_link_libraries(astra_camera_node astra_driver_lib)
-add_dependencies(astra_camera_node astra_openni2)
 
 find_package(libuvc REQUIRED)
 find_package(rosidl_default_generators REQUIRED)
 find_package(image_transport REQUIRED)
 find_package(camera_info_manager REQUIRED)
+
+include_directories(${libuvc_INCLUDE_DIRS})
 
 rosidl_generate_interfaces(${PROJECT_NAME}
   srv/GetDeviceType.srv
@@ -114,7 +74,47 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   DEPENDENCIES builtin_interfaces sensor_msgs
 )
 ament_export_dependencies(rosidl_default_runtime)
-message(STATUS "libuvc  ${libuvc_VERSION_MAJOR}.${libuvc_VERSION_MINOR}.${libuvc_VERSION_PATCH}")
+
+add_library(astra_wrapper
+   src/astra_convert.cpp
+   src/astra_device.cpp
+   src/astra_device_info.cpp
+   src/astra_timer_filter.cpp
+   src/astra_frame_listener.cpp
+   src/astra_device_manager.cpp
+   src/astra_exception.cpp
+   src/astra_video_mode.cpp
+)
+rosidl_target_interfaces(astra_wrapper
+  ${PROJECT_NAME} "rosidl_typesupport_cpp")
+ament_target_dependencies(astra_wrapper
+  "builtin_interfaces"
+  "rclcpp"
+  "sensor_msgs"
+)
+target_link_libraries(astra_wrapper -lOpenNI2  -L${ORBBEC_OPENNI2_REDIST} ${Boost_LIBRARIES})
+
+add_library(astra_driver_lib src/astra_driver.cpp)
+rosidl_target_interfaces(astra_driver_lib
+  ${PROJECT_NAME} "rosidl_typesupport_cpp")
+ament_target_dependencies(astra_driver_lib
+  "builtin_interfaces"
+  "rclcpp"
+  "sensor_msgs"
+)
+target_link_libraries(astra_driver_lib astra_wrapper ${Boost_LIBRARIES})
+
+add_library(astra_camera_nodelet SHARED
+  ros/astra_camera_nodelet.cpp
+)
+target_link_libraries(astra_camera_nodelet astra_driver_lib ${Boost_LIBRARIES})
+rclcpp_components_register_nodes(astra_camera_nodelet "astra_camera::AstraDriverNode")
+
+add_executable(astra_camera_node
+   ros/astra_camera_node.cpp
+)
+target_link_libraries(astra_camera_node astra_driver_lib ${Boost_LIBRARIES})
+
 add_executable(camera_node 
   src/libuvc_camera/main.cpp
   src/libuvc_camera/camera_driver.cpp
@@ -150,11 +150,11 @@ install(TARGETS astra_wrapper astra_driver_lib
   RUNTIME DESTINATION bin
 )
 
-install(FILES ${CMAKE_BINARY_DIR}/openni2/Redist/libOpenNI2Orbbec.so
+install(FILES include/openni2_redist/${HOST_PLATFORM}/libOpenNI2.so
   DESTINATION lib
 )
 
-install(DIRECTORY ${CMAKE_BINARY_DIR}/openni2/Redist/OpenNI2
+install(DIRECTORY include/openni2_redist/${HOST_PLATFORM}/OpenNI2
   DESTINATION lib
 )
 
