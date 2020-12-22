@@ -129,6 +129,17 @@ const std::string AstraDevice::getStringID() const
   return ID_str;
 }
 
+OBCameraParams AstraDevice::getCameraParams() const
+{
+  return m_CamParams;
+}
+
+void AstraDevice::setCameraParams(OBCameraParams param)
+{
+  int data_size = sizeof(OBCameraParams);
+  openni_device_->setProperty(openni::OBEXTENSION_ID_CAM_PARAMS, (uint8_t*)&param, data_size);
+}
+
 bool AstraDevice::isValid() const
 {
   return (openni_device_.get() != 0) && openni_device_->isValid();

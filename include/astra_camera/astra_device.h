@@ -123,9 +123,11 @@ public:
   float getIRFocalLength (int output_y_resolution) const;
   float getColorFocalLength (int output_y_resolution) const;
   float getDepthFocalLength (int output_y_resolution) const;
+  OBCameraParams getCameraParams() const;
 
   void setAutoExposure(bool enable) throw (AstraException);
   void setAutoWhiteBalance(bool enable) throw (AstraException);
+  void setCameraParams(OBCameraParams param);
 
   bool getAutoExposure() const;
   bool getAutoWhiteBalance() const;
@@ -159,6 +161,7 @@ protected:
   bool depth_video_started_;
 
   bool image_registration_activated_;
+  OBCameraParams m_CamParams;
 
   bool use_device_time_;
 
