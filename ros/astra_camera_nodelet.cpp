@@ -41,6 +41,14 @@ class AstraDriverNode : public rclcpp::Node
 public:
   AstraDriverNode(const rclcpp::NodeOptions& options) : rclcpp::Node("astra_driver", options)
   {
+    timer_ = create_wall_timer(1s, std::bind(&AstraDriverNode::on_timer, this));
+  };
+
+  ~AstraDriverNode() {}
+private:
+  rclcpp::TimerBase::SharedPtr timer_;
+  void on_timer()
+  {
     // RGB
     size_t width = 1280;
     size_t height = 1024;
@@ -72,10 +80,9 @@ public:
     RCLCPP_INFO(nh->get_logger(), "Initializing...");
     astra_wrapper::AstraDriver drv(nh, pnh, width, height, framerate, dwidth, dheight, dframerate, dformat);
     RCLCPP_INFO(nh->get_logger(), "Initialized");
+    timer_->cancel();
     rclcpp::spin(nh);
-  };
-
-  ~AstraDriverNode() {}
+  }
 };
 }
 #include "rclcpp_components/register_node_macro.hpp"

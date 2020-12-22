@@ -60,7 +60,7 @@ AstraDriver::AstraDriver(rclcpp::Node::SharedPtr& n, rclcpp::Node::SharedPtr& pn
     depth_registration_(false),
     data_skip_ir_counter_(0),
     data_skip_color_counter_(0),
-    data_skip_depth_counter_ (0),
+    data_skip_depth_counter_(0),
     ir_subscribers_(false),
     color_subscribers_(false),
     depth_subscribers_(false),
@@ -69,7 +69,6 @@ AstraDriver::AstraDriver(rclcpp::Node::SharedPtr& n, rclcpp::Node::SharedPtr& pn
     can_publish_color_(true),
     can_publish_depth_(true)
 {
-
   RCLCPP_INFO(nh_->get_logger(), "generating video mode table map...");
   genVideoModeTableMap();
   RCLCPP_INFO(nh_->get_logger(), "generated video mode table map");
@@ -242,6 +241,8 @@ void AstraDriver::advertiseROSTopics()
   //ir_info_manager_  = boost::make_shared<camera_info_manager::CameraInfoManager>(ir_nh,  ir_name,  ir_info_url_);
 
   //get_serial_server = nh_.advertiseService("get_serial", &AstraDriver::getSerialCb,this);
+  get_device_type_server = nh_->create_service<astra_camera::srv::GetDeviceType>("get_device_type", &AstraDriver::getDeviceTypeCb);
+  get_camera_info_server = nh_->create_service<astra_camera::srv::GetCameraInfo>("get_camera_info", &AstraDriver::getCameraInfoCb);
 
 }
 
@@ -252,6 +253,58 @@ bool AstraDriver::getSerialCb(astra_camera::GetSerialRequest& req, astra_camera:
 }
 */
 
+void AstraDriver::getDeviceTypeCb(const std::shared_ptr<astra_camera::srv::GetDeviceType::Request> request,
+          std::shared_ptr<astra_camera::srv::GetDeviceType::Response> response)
+{
+  response->device_type = std::string(device_->getDeviceType());
+}
+
+void AstraDriver::getCameraInfoCb(const std::shared_ptr<astra_camera::srv::GetCameraInfo::Request> request,
+          std::shared_ptr<astra_camera::srv::GetCameraInfo::Response> response)
+{
+  response->info = convertAstraCameraInfo(device_->getCameraParams(), nh_->now());
+}
+
+sensor_msgs::msg::CameraInfo AstraDriver::convertAstraCameraInfo(OBCameraParams p, rclcpp::Time time) const
+{
+  sensor_msgs::msg::CameraInfo info;
+  // info.width = width;
+  // info.height = height;
+  info.distortion_model = sensor_msgs::distortion_models::PLUMB_BOB;
+  info.D.resize(5, 0.0);
+  info.D[0] = p.r_k[0];
+  info.D[1] = p.r_k[1];
+  info.D[2] = p.r_k[3];
+  info.D[3] = p.r_k[4];
+  info.D[4] = p.r_k[2];
+
+  info.K.assign(0.0);
+  info.K[0] = p.r_intr_p[0];
+  info.K[2] = p.r_intr_p[2];
+  info.K[4] = p.r_intr_p[1];
+  info.K[5] = p.r_intr_p[3];
+  info.K[8] = 1.0;
+
+  info.R.assign(0.0);
+  for (int i = 0; i < 9; i++)
+  {
+    info.R[i] = p.r2l_r[i];
+  }
+
+  info.P.assign(0.0);
+  info.P[0] = info.K[0];
+  info.P[2] = info.K[2];
+  info.P[3] = p.r2l_t[0];
+  info.P[5] = info.K[4];
+  info.P[6] = info.K[5];
+  info.P[7] = p.r2l_t[1];
+  info.P[10] = 1.0;
+  info.P[11] = p.r2l_t[2];
+  // Fill in header
+  info.header.stamp    = time;
+  info.header.frame_id = color_frame_id_;
+  return info;
+}
 /*
 void AstraDriver::configCb(Config &config, uint32_t level)
 {

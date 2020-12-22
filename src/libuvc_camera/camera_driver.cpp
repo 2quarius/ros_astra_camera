@@ -20,8 +20,8 @@ CameraDriver::CameraDriver()
     param_client_ = std::make_shared<rclcpp::AsyncParametersClient>(this);
     ns = get_namespace();
     RCLCPP_INFO(get_logger(), "Creating clients and services...");
-    device_type_client = create_client<astra_camera::srv::GetDeviceType>(ns + "get_device_type");
-    camera_info_client = create_client<astra_camera::srv::GetCameraInfo>(ns + "get_camera_info");
+    device_type_client = create_client<astra_camera::srv::GetDeviceType>(ns + "/get_device_type");
+    camera_info_client = create_client<astra_camera::srv::GetCameraInfo>(ns + "/get_camera_info");
     get_uvc_exposure_server = create_service<astra_camera::srv::GetUVCExposure>("get_uvc_exposure", 
                                 std::bind(&CameraDriver::getUVCExposureCb, this, std::placeholders::_1, std::placeholders::_2));
     set_uvc_exposure_server = create_service<astra_camera::srv::SetUVCExposure>("set_uvc_exposure", 
