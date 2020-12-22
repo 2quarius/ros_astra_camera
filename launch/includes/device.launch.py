@@ -14,7 +14,6 @@ def arg(name, value):
 
 def generate_launch_description():
     return LaunchDescription([
-        DeclareLaunchArgument('manager'),
         DeclareLaunchArgument('device_id'),
         DeclareLaunchArgument('bootorder'),
         DeclareLaunchArgument('devnums'),

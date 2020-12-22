@@ -33,6 +33,8 @@ def generate_launch_description():
         arg('rgb', "rgb"),
         arg('ir', 'ir'),
         arg('depth', 'depth'),
+        arg('depth_registered', 'depth_registered'),
+        arg('depth_registered_filtered', 'depth_registered'),
         arg('load_driver', 'true'),
         arg('publish_tf', 'true'),
         arg('rgb_processing', 'true'),
@@ -87,14 +89,14 @@ def generate_launch_description():
                 remappings=[
                     (['/', launch.substitutions.LaunchConfiguration('camera'), '/image_raw'], ['/', launch.substitutions.LaunchConfiguration('camera'), '/rgb/image_raw'])
                 ]
-            ),
-            arg('manager', [launch.substitutions.LaunchConfiguration('camera'), '_nodelet_manager']),
-            arg('debug', 'false'),
+            )
+        ]),
+        launch.actions.GroupAction([
+            launch_ros.actions.PushRosNamespace(launch.substitutions.LaunchConfiguration('camera')),
             launch.actions.IncludeLaunchDescription(
                 launch.launch_description_sources.PythonLaunchDescriptionSource(astra_camera_dir + '/launch/includes/device.launch.py'),
                 launch_arguments = [
                     ('container', launch.substitutions.LaunchConfiguration('container')),
-                    ("manager", launch.substitutions.LaunchConfiguration('manager')),
                     ("device_id", launch.substitutions.LaunchConfiguration('device_id')),
                     ("bootorder", launch.substitutions.LaunchConfiguration('bootorder')),
                     ("devnums", launch.substitutions.LaunchConfiguration('devnums')),
@@ -112,15 +114,19 @@ def generate_launch_description():
                     ("auto_white_balance", launch.substitutions.LaunchConfiguration('auto_white_balance'))
                 ],
                 condition=launch.conditions.IfCondition(launch.substitutions.LaunchConfiguration('load_driver'))
-            ),
+            )
+        ]),
+        launch.actions.GroupAction([
+            launch_ros.actions.PushRosNamespace(launch.substitutions.LaunchConfiguration('camera')),
             launch.actions.IncludeLaunchDescription(
                 launch.launch_description_sources.PythonLaunchDescriptionSource(rgbd_launch_dir + '/launch/includes/processing.launch.py'),
                 launch_arguments=[
                     ('container', launch.substitutions.LaunchConfiguration('container')),
-                    ("manager", launch.substitutions.LaunchConfiguration('manager')),
                     ("rgb", launch.substitutions.LaunchConfiguration('rgb')),
                     ("ir", launch.substitutions.LaunchConfiguration('ir')),
                     ("depth", launch.substitutions.LaunchConfiguration('depth')),
+                    ('depth_registered', launch.substitutions.LaunchConfiguration('depth_registered')),
+                    ('depth_registered_filtered', launch.substitutions.LaunchConfiguration('depth_registered_filtered')),
                     ("respawn", launch.substitutions.LaunchConfiguration('respawn')),
                     ("rgb_processing", launch.substitutions.LaunchConfiguration('rgb_processing')),
                     ("debayer_processing", launch.substitutions.LaunchConfiguration('debayer_processing')),
@@ -133,7 +139,7 @@ def generate_launch_description():
                     ("sw_registered_processing", launch.substitutions.LaunchConfiguration('sw_registered_processing'))
                 ]
             )
-        ], scoped=False),
+        ]),
         launch.actions.IncludeLaunchDescription(
             launch.launch_description_sources.PythonLaunchDescriptionSource(astra_camera_dir + '/launch/includes/astra_frames.launch.py'),
             launch_arguments=[

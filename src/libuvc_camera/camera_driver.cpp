@@ -195,9 +195,9 @@ void CameraDriver::ReconfigureCallback(const rcl_interfaces::msg::ParameterEvent
         PARAM_INT(auto_focus, focus_auto, param.value.bool_value ? 1 : 0);
         PARAM_INT(focus_absolute, focus_abs, param.value.integer_value);
 #if LIBUVC_VERSION_GTE(0,0,6)
-    PARAM_INT(gain, gain, param.value.as_int());
-    PARAM_INT(iris_absolute, iris_abs, param.value.as_int());
-    PARAM_INT(brightness, brightness, param.value.as_int());
+    PARAM_INT(gain, gain, param.value.integer_value);
+    PARAM_INT(iris_absolute, iris_abs, param.value.integer_value);
+    PARAM_INT(brightness, brightness, param.value.integer_value);
 #endif
         if(param.name == "pan_absolute" || param.name == "tilt_absolute") {
             auto pan_abs = get_parameter("pan_absolute").as_int();
