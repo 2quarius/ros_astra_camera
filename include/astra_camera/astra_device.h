@@ -36,6 +36,7 @@
 #include "astra_camera/astra_video_mode.h"
 
 #include "astra_camera/astra_exception.h"
+#include <openni2/OpenNI.h>
 
 #include <boost/shared_ptr.hpp>
 #include <boost/cstdint.hpp>
