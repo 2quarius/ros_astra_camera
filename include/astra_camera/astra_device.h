@@ -125,6 +125,7 @@ public:
   float getColorFocalLength (int output_y_resolution) const;
   float getDepthFocalLength (int output_y_resolution) const;
   OBCameraParams getCameraParams() const;
+  char* getDeviceType();
 
   void setAutoExposure(bool enable) throw (AstraException);
   void setAutoWhiteBalance(bool enable) throw (AstraException);
@@ -163,6 +164,7 @@ protected:
 
   bool image_registration_activated_;
   OBCameraParams m_CamParams;
+  char device_type[32];
 
   bool use_device_time_;
 

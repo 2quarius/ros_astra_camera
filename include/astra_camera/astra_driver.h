@@ -87,6 +87,7 @@ private:
   sensor_msgs::msg::CameraInfo::SharedPtr getColorCameraInfo(int width, int height, builtin_interfaces::msg::Time time) const;
   sensor_msgs::msg::CameraInfo::SharedPtr getIRCameraInfo(int width, int height, builtin_interfaces::msg::Time time) const;
   sensor_msgs::msg::CameraInfo::SharedPtr getDepthCameraInfo(int width, int height, builtin_interfaces::msg::Time time) const;
+  sensor_msgs::msg::CameraInfo convertAstraCameraInfo(OBCameraParams p, ros::Time time) const;
 
   void readConfigFromParameterServer();
 
@@ -107,10 +108,10 @@ private:
 
   //bool getSerialCb(astra_camera::GetSerialRequest& req, astra_camera::GetSerialResponse& res);
   void getCameraInfoCb(const std::shared_ptr<astra_camera::srv::GetCameraInfo::Request> request,
-          std::shared_ptr<astra_camera::srv::GetCameraInfo::Response> response)
+          std::shared_ptr<astra_camera::srv::GetCameraInfo::Response> response);
   
   void getDeviceTypeCb(const std::shared_ptr<astra_camera::srv::GetDeviceType::Request> request,
-          std::shared_ptr<astra_camera::srv::GetDeviceType::Response> response)
+          std::shared_ptr<astra_camera::srv::GetDeviceType::Response> response);
 
   //void configCb(Config &config, uint32_t level);
 

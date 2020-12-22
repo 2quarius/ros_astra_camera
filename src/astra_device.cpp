@@ -78,6 +78,10 @@ AstraDevice::AstraDevice(const std::string& device_URI) throw (AstraException) :
   device_info_ = boost::make_shared<openni::DeviceInfo>();
   *device_info_ = openni_device_->getDeviceInfo();
 
+  int device_type_size = sizeof(device_type);
+  memset(device_type, 0, device_type_size);
+  openni_device_->getProperty(openni::OBEXTENSION_ID_DEVICETYPE, (uint8_t*)&device_type, &device_type_size);
+  
   ir_frame_listener = boost::make_shared<AstraFrameListener>();
   color_frame_listener = boost::make_shared<AstraFrameListener>();
   depth_frame_listener = boost::make_shared<AstraFrameListener>();
@@ -127,6 +131,11 @@ const std::string AstraDevice::getStringID() const
   boost::replace_all(ID_str, "@", "");
 
   return ID_str;
+}
+
+char* AstraDevice::getDeviceType()
+{
+  return device_type;
 }
 
 OBCameraParams AstraDevice::getCameraParams() const
