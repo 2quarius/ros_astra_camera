@@ -70,9 +70,13 @@ AstraDriver::AstraDriver(rclcpp::Node::SharedPtr& n, rclcpp::Node::SharedPtr& pn
     can_publish_depth_(true)
 {
 
+  RCLCPP_INFO(nh_->get_logger(), "generating video mode table map...");
   genVideoModeTableMap();
+  RCLCPP_INFO(nh_->get_logger(), "generated video mode table map");
 
+  RCLCPP_INFO(nh_->get_logger(), "reading config from parameter server...");
   readConfigFromParameterServer();
+  RCLCPP_INFO(nh_->get_logger(), "Done read");
 
 #if MULTI_ASTRA
 	int bootOrder, devnums;
@@ -130,7 +134,9 @@ AstraDriver::AstraDriver(rclcpp::Node::SharedPtr& n, rclcpp::Node::SharedPtr& pn
 	 }
 	 else
 	 {
+     RCLCPP_INFO(nh_->get_logger(), "initializing device...");
 	 	initDevice();
+     RCLCPP_INFO(nh_->get_logger(), "initialized device");
 	 }
 #else
   initDevice();
@@ -157,7 +163,9 @@ AstraDriver::AstraDriver(rclcpp::Node::SharedPtr& n, rclcpp::Node::SharedPtr& pn
   AstraVideoMode depth_video_mode{dwidth, dheight, dframerate, dformat};
   setDepthVideoMode(depth_video_mode);
 
+  RCLCPP_INFO(nh_->get_logger(), "advertising ros topics...");
   advertiseROSTopics();
+  RCLCPP_INFO(nh_->get_logger(), "advertised ros topics...");
 }
 
 void AstraDriver::advertiseROSTopics()

@@ -89,10 +89,7 @@ def generate_launch_description():
                 remappings=[
                     (['/', launch.substitutions.LaunchConfiguration('camera'), '/image_raw'], ['/', launch.substitutions.LaunchConfiguration('camera'), '/rgb/image_raw'])
                 ]
-            )
-        ]),
-        launch.actions.GroupAction([
-            launch_ros.actions.PushRosNamespace(launch.substitutions.LaunchConfiguration('camera')),
+            ),
             launch.actions.IncludeLaunchDescription(
                 launch.launch_description_sources.PythonLaunchDescriptionSource(astra_camera_dir + '/launch/includes/device.launch.py'),
                 launch_arguments = [
@@ -114,10 +111,7 @@ def generate_launch_description():
                     ("auto_white_balance", launch.substitutions.LaunchConfiguration('auto_white_balance'))
                 ],
                 condition=launch.conditions.IfCondition(launch.substitutions.LaunchConfiguration('load_driver'))
-            )
-        ]),
-        launch.actions.GroupAction([
-            launch_ros.actions.PushRosNamespace(launch.substitutions.LaunchConfiguration('camera')),
+            ),
             launch.actions.IncludeLaunchDescription(
                 launch.launch_description_sources.PythonLaunchDescriptionSource(rgbd_launch_dir + '/launch/includes/processing.launch.py'),
                 launch_arguments=[
