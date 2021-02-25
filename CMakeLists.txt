@@ -94,7 +94,7 @@ ament_target_dependencies(astra_wrapper
 )
 target_link_libraries(astra_wrapper -lOpenNI2  -L${ORBBEC_OPENNI2_REDIST} ${Boost_LIBRARIES})
 
-add_library(astra_driver_lib src/astra_driver.cpp)
+add_library(astra_driver_lib src/astra_driver_new.cpp)
 rosidl_target_interfaces(astra_driver_lib
   ${PROJECT_NAME} "rosidl_typesupport_cpp")
 ament_target_dependencies(astra_driver_lib

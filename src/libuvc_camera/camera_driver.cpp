@@ -477,10 +477,11 @@ void CameraDriver::ImageCallback(uvc_frame_t *frame)
             RCLCPP_INFO(get_logger(), "service not available, waiting again...");
         }
         auto result = device_type_client->async_send_request(device_type_srv);
-        if(rclcpp::spin_until_future_complete(shared_from_this(), result) != rclcpp::FutureReturnCode::SUCCESS) {
-            RCLCPP_ERROR(get_logger(), "Failed to call service get_device_type");
-        }
-        device_type_ = result.get()->device_type;
+        auto status = result.wait_for(1s);
+        while(status != std::future_status::ready) {
+            status = result.wait_for(1s);
+        }        
+	device_type_ = result.get()->device_type;
         if(strcmp(device_type_.c_str(), OB_STEREO_S) == 0) {
             device_type_no_ = OB_STEREO_S_NO;
         } else if (strcmp(device_type_.c_str(), OB_EMBEDDED_S) == 0) {
@@ -507,10 +508,11 @@ void CameraDriver::ImageCallback(uvc_frame_t *frame)
             RCLCPP_INFO(get_logger(), "service not available, waiting again...");
         }
         auto result = camera_info_client->async_send_request(camera_info_srv);
-        if(rclcpp::spin_until_future_complete(shared_from_this(), result) != rclcpp::FutureReturnCode::SUCCESS) {
-            RCLCPP_ERROR(get_logger(), "Failed to call service get_camera_info");
-        }
-        camera_info_ = result.get()->info;
+        auto status = result.wait_for(1s);
+        while(status != std::future_status::ready) {
+            status = result.wait_for(1s);
+        }	
+	camera_info_ = result.get()->info;
         camera_info_init_ = true;
         camera_info_valid_ = true;
         if(std::isnan(camera_info_.k[0]) || std::isnan(camera_info_.k[2]) || std::isnan(camera_info_.k[4]) || std::isnan(camera_info_.k[5]))

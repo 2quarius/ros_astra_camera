@@ -87,7 +87,7 @@ private:
   sensor_msgs::msg::CameraInfo::SharedPtr getColorCameraInfo(int width, int height, builtin_interfaces::msg::Time time) const;
   sensor_msgs::msg::CameraInfo::SharedPtr getIRCameraInfo(int width, int height, builtin_interfaces::msg::Time time) const;
   sensor_msgs::msg::CameraInfo::SharedPtr getDepthCameraInfo(int width, int height, builtin_interfaces::msg::Time time) const;
-  sensor_msgs::msg::CameraInfo convertAstraCameraInfo(OBCameraParams p, ros::Time time) const;
+  sensor_msgs::msg::CameraInfo convertAstraCameraInfo(OBCameraParams p, rclcpp::Time time) const;
 
   void readConfigFromParameterServer();
 
