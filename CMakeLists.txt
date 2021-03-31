@@ -85,6 +85,8 @@ add_library(astra_wrapper
    src/astra_exception.cpp
    src/astra_video_mode.cpp
 )
+rosidl_target_interfaces(astra_wrapper
+  ${PROJECT_NAME} "rosidl_typesupport_cpp")
 ament_target_dependencies(astra_wrapper
   "builtin_interfaces"
   "rclcpp"
@@ -115,7 +117,6 @@ add_executable(astra_camera_node
 )
 target_link_libraries(astra_camera_node astra_driver_lib ${Boost_LIBRARIES})
 
-message(STATUS "libuvc  ${libuvc_VERSION_MAJOR}.${libuvc_VERSION_MINOR}.${libuvc_VERSION_PATCH}")
 add_executable(camera_node 
   src/libuvc_camera/main.cpp
   src/libuvc_camera/camera_driver.cpp

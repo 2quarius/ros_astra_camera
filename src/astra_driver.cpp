@@ -81,7 +81,7 @@ AstraDriver::AstraDriver(rclcpp::Node::SharedPtr& n, rclcpp::Node::SharedPtr& pn
 	int bootOrder, devnums;
 	//pnh.getParam("bootorder", bootOrder);
 	//pnh.getParam("devnums", devnums);
-        bootOrder = 1;
+        bootOrder = 0;
         devnums = 1;
 	if( devnums>1 )
 	{
@@ -106,12 +106,15 @@ AstraDriver::AstraDriver(rclcpp::Node::SharedPtr& n, rclcpp::Node::SharedPtr& pn
 			  	ROS_ERROR("Create Share Memory Error:%s", strerror(errno));
 			}
 			shm = (char *)shmat(shmid, 0, 0);
-			while( *shm!=bootOrder);
+			while( *shm!=bootOrder)
+			{
+				boost::this_thread::sleep(boost::posix_time::milliseconds(10));
+			}
 			initDevice();
 			ROS_WARN("*********** device_id %s already open device************************ ", device_id_.c_str());
 			*shm = (bootOrder+1);
 		}
-		if(  bootOrder==1 )
+		if(  bootOrder==devnums )
 		{
 			while( *shm!=(devnums+1)) ;
 			if(shmdt(shm) == -1)  
@@ -241,8 +244,8 @@ void AstraDriver::advertiseROSTopics()
   //ir_info_manager_  = boost::make_shared<camera_info_manager::CameraInfoManager>(ir_nh,  ir_name,  ir_info_url_);
 
   //get_serial_server = nh_.advertiseService("get_serial", &AstraDriver::getSerialCb,this);
-  get_device_type_server = nh_->create_service<astra_camera::srv::GetDeviceType>("get_device_type", &AstraDriver::getDeviceTypeCb);
-  get_camera_info_server = nh_->create_service<astra_camera::srv::GetCameraInfo>("get_camera_info", &AstraDriver::getCameraInfoCb);
+  get_device_type_server = nh_->create_service<astra_camera::srv::GetDeviceType>("camera/get_device_type", std::bind(&AstraDriver::getDeviceTypeCb, this, std::placeholders::_1, std::placeholders::_2));
+  get_camera_info_server = nh_->create_service<astra_camera::srv::GetCameraInfo>("camera/get_camera_info", std::bind(&AstraDriver::getCameraInfoCb, this, std::placeholders::_1, std::placeholders::_2));
 
 }
 
@@ -271,35 +274,35 @@ sensor_msgs::msg::CameraInfo AstraDriver::convertAstraCameraInfo(OBCameraParams 
   // info.width = width;
   // info.height = height;
   info.distortion_model = sensor_msgs::distortion_models::PLUMB_BOB;
-  info.D.resize(5, 0.0);
-  info.D[0] = p.r_k[0];
-  info.D[1] = p.r_k[1];
-  info.D[2] = p.r_k[3];
-  info.D[3] = p.r_k[4];
-  info.D[4] = p.r_k[2];
+  info.d.resize(5, 0.0);
+  info.d[0] = p.r_k[0];
+  info.d[1] = p.r_k[1];
+  info.d[2] = p.r_k[3];
+  info.d[3] = p.r_k[4];
+  info.d[4] = p.r_k[2];
 
-  info.K.assign(0.0);
-  info.K[0] = p.r_intr_p[0];
-  info.K[2] = p.r_intr_p[2];
-  info.K[4] = p.r_intr_p[1];
-  info.K[5] = p.r_intr_p[3];
-  info.K[8] = 1.0;
+  info.k.fill(0.0);
+  info.k[0] = p.r_intr_p[0];
+  info.k[2] = p.r_intr_p[2];
+  info.k[4] = p.r_intr_p[1];
+  info.k[5] = p.r_intr_p[3];
+  info.k[8] = 1.0;
 
-  info.R.assign(0.0);
+  info.r.fill(0.0);
   for (int i = 0; i < 9; i++)
   {
-    info.R[i] = p.r2l_r[i];
+    info.r[i] = p.r2l_r[i];
   }
 
-  info.P.assign(0.0);
-  info.P[0] = info.K[0];
-  info.P[2] = info.K[2];
-  info.P[3] = p.r2l_t[0];
-  info.P[5] = info.K[4];
-  info.P[6] = info.K[5];
-  info.P[7] = p.r2l_t[1];
-  info.P[10] = 1.0;
-  info.P[11] = p.r2l_t[2];
+  info.p.fill(0.0);
+  info.p[0] = info.k[0];
+  info.p[2] = info.k[2];
+  info.p[3] = p.r2l_t[0];
+  info.p[5] = info.k[4];
+  info.p[6] = info.k[5];
+  info.p[7] = p.r2l_t[1];
+  info.p[10] = 1.0;
+  info.p[11] = p.r2l_t[2];
   // Fill in header
   info.header.stamp    = time;
   info.header.frame_id = color_frame_id_;
